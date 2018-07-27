@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension   	point="org.eclipse.core.runtime.applications"   	id="net.tourbook.e4.application">
+      <application>
+         <run     class="net.tourbook.e4.Application"/>
+      </application>
+   </extension>
+   
+	<extension		point="org.eclipse.core.runtime.products"				id="net.tourbook.e4.product">
+		<product 
+			application		="net.tourbook.e4.application" 
+			name				="MyTourbook App E4"
+		>
+			<property name="appName"				value="MyTourbook E4 App Name"> </property>
+			<property name="applicationXMI"		value="net.tourbook.e4/Application.e4xmi"> </property>
+		</product>
+	</extension>
+   
+   <extension		point="org.eclipse.ui.perspectives">
+      <perspective
+            class="net.tourbook.e4.Perspective"
+            name="RCP Perspective"
+            id="net.tourbook.e4.perspective"
+      />
+   </extension>
+   <extension
+         id="product"
+         point="org.eclipse.core.runtime.products">
+      <product
+            application="net.tourbook.e4.application"
+            name="MyTourbook App E4">
+      </product>
+   </extension>
+
+</plugin>
