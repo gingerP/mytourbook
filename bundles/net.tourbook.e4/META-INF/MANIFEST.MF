@@ -5,10 +5,13 @@ Bundle-SymbolicName: net.tourbook.e4;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: net.tourbook.e4.Activator
 Require-Bundle: org.eclipse.ui,
-  org.eclipse.core.runtime,
-  org.eclipse.equinox.ds,
-  org.eclipse.equinox.util,
-  org.eclipse.equinox.event
+ org.eclipse.core.runtime,
+ org.eclipse.equinox.ds,
+ org.eclipse.equinox.util,
+ org.eclipse.equinox.event,
+ org.eclipse.ui.navigator,
+ org.eclipse.ui.navigator.resources,
+ org.eclipse.ui.views
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Automatic-Module-Name: net.tourbook.e4
 Bundle-ActivationPolicy: lazy
