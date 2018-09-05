@@ -1,14 +1,14 @@
 /*******************************************************************************
  * Copyright (C) 2005, 2018 Wolfgang Schramm and Contributors
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with
  * this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
@@ -179,7 +179,7 @@ public class Map2View extends ViewPart implements IMapContextProvider, IPhotoEve
 		IMapBookmarks, IMapBookmarkListener, IMapPositionListener, IMapSyncListener, IMapInfoListener {
 
 // SET_FORMATTING_OFF
-	
+
 	public static final String		ID														= "net.tourbook.map2.view.Map2ViewId";		//$NON-NLS-1$
 
 	private static final String	IMAGE_GRAPH											= net.tourbook.Messages.Image__Graph;
@@ -206,7 +206,7 @@ public class Map2View extends ViewPart implements IMapContextProvider, IPhotoEve
 	private static final String	STATE_IS_SYNC_WITH_TOURCHART_SLIDER_IS_CENTERED		= "STATE_IS_SYNC_WITH_TOURCHART_SLIDER_IS_CENTERED";	//$NON-NLS-1$
 	static final String				STATE_IS_ZOOM_WITH_MOUSE_POSITION 						= "STATE_IS_ZOOM_WITH_MOUSE_POSITION";						//$NON-NLS-1$
 	static final boolean 			STATE_IS_ZOOM_WITH_MOUSE_POSITION_DEFAULT 			= true;
-	
+
 	private static final String	MEMENTO_SHOW_START_END_IN_MAP				= "action.show-start-end-in-map";			//$NON-NLS-1$
 	private static final String	MEMENTO_SHOW_TOUR_MARKER					= "action.show-tour-marker";					//$NON-NLS-1$
 	static final String				MEMENTO_SHOW_SLIDER_IN_MAP					= "action.show-slider-in-map";				//$NON-NLS-1$
@@ -269,9 +269,9 @@ public class Map2View extends ViewPart implements IMapContextProvider, IPhotoEve
 			MapGraphId.Pace,
 			MapGraphId.Pulse,
 			MapGraphId.Speed,
-			
+
 			MapGraphId.RunDyn_StepLength,
-			
+
 			MapGraphId.HrZone,
 	};
 
@@ -285,11 +285,11 @@ public class Map2View extends ViewPart implements IMapContextProvider, IPhotoEve
 
 	private final TourInfoIconToolTipProvider	_tourInfoToolTipProvider			= new TourInfoIconToolTipProvider();
 	private final ITourToolTipProvider			_wayPointToolTipProvider			= new WayPointToolTipProvider();
-	
+
 	private final DirectMappingPainter			_directMappingPainter				= new DirectMappingPainter();
 	private final MapInfoManager					_mapInfoManager						= MapInfoManager.getInstance();
 	private final TourPainterConfiguration		_tourPainterConfig					= TourPainterConfiguration.getInstance();
-	
+
 // SET_FORMATTING_ON
 
 	{}
@@ -1122,7 +1122,7 @@ public class Map2View extends ViewPart implements IMapContextProvider, IPhotoEve
 
 	/**
 	 * Center photo in the map
-	 * 
+	 *
 	 * @param allPhotos
 	 * @param isForceZooming
 	 */
@@ -1314,7 +1314,7 @@ public class Map2View extends ViewPart implements IMapContextProvider, IPhotoEve
 
 	/**
 	 * Creates a new legend image and disposes the old image.
-	 * 
+	 *
 	 * @param mapColorProvider
 	 */
 	private void createLegendImage(final IMapColorProvider mapColorProvider) {
@@ -1673,7 +1673,7 @@ public class Map2View extends ViewPart implements IMapContextProvider, IPhotoEve
 			_actionTourColorSpeed.setEnabled(oneTourData.getSpeedSerie() != null);
 			_actionTourColorPace.setEnabled(oneTourData.getPaceSerie() != null);
 			_actionTourColorHrZone.setEnabled(canShowHrZones);
-			_actionTourColor_RunDyn_StepLength.setEnabled(oneTourData.runDyn_StepLength != null);
+			_actionTourColor_RunDyn_StepLength.setEnabled(oneTourData.getRunDyn_StepLength() != null);
 
 		} else {
 
@@ -1880,7 +1880,7 @@ public class Map2View extends ViewPart implements IMapContextProvider, IPhotoEve
 
 	/**
 	 * Calculate lat/lon bounds for all photos.
-	 * 
+	 *
 	 * @param allPhotos
 	 * @return
 	 */
@@ -2707,7 +2707,7 @@ public class Map2View extends ViewPart implements IMapContextProvider, IPhotoEve
 
 	/**
 	 * Paint the currently selected tour in the map
-	 * 
+	 *
 	 * @param tourData
 	 * @param forceRedraw
 	 * @param isSynchronized
@@ -2971,7 +2971,7 @@ public class Map2View extends ViewPart implements IMapContextProvider, IPhotoEve
 	 * Calculates a zoom level so that all points in the specified set will be visible on screen.
 	 * This is useful if you have a bunch of points in an area like a city and you want to zoom out
 	 * so that the entire city and it's points are visible without panning.
-	 * 
+	 *
 	 * @param tourPositions
 	 *           A set of GeoPositions to calculate the new zoom from
 	 * @param adjustZoomLevel
@@ -2988,7 +2988,7 @@ public class Map2View extends ViewPart implements IMapContextProvider, IPhotoEve
 
 	/**
 	 * Calculate the bounds for the tour in latitude and longitude values
-	 * 
+	 *
 	 * @param tourData
 	 * @param valueIndex
 	 * @return
@@ -3615,7 +3615,7 @@ public class Map2View extends ViewPart implements IMapContextProvider, IPhotoEve
 
 	/**
 	 * Show tour when it is not yet displayed.
-	 * 
+	 *
 	 * @param tourData
 	 */
 	private void updateUI_ShowTour(final TourData tourData) {

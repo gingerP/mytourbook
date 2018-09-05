@@ -1154,13 +1154,13 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 	 * caches the world positions for the tour lat/long values for each zoom level
 	 */
 	@Transient
-	private final TIntObjectHashMap<Point[]>						_tourWorldPosition	= new TIntObjectHashMap<>();
+	private final TIntObjectHashMap<Point[]>							_tourWorldPosition	= new TIntObjectHashMap<>();
 
 	/**
 	 * caches the world positions for the way point lat/long values for each zoom level
 	 */
 	@Transient
-	private final TIntObjectHashMap<TIntObjectHashMap<Point>>	_twpWorldPosition	= new TIntObjectHashMap<>();
+	private final TIntObjectHashMap<TIntObjectHashMap<Point>>	_twpWorldPosition		= new TIntObjectHashMap<>();
 
 	/**
 	 * when a tour was deleted and is still visible in the raw data view, resaving the tour or
@@ -1379,49 +1379,57 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 	 * Running dynamics data
 	 *
 	 *	stance_time                  267.0  ms
-	 *	stance_time_balance           50.56 percent			* TourData.RUN_DYN_DATA_MULTIPLIER
+	 *	stance_time_balance           50.56 percent		* TourData.RUN_DYN_DATA_MULTIPLIER
 	 *	step_length                 1147.0  mm
 	 *	vertical_oscillation         107.2  mm				* TourData.RUN_DYN_DATA_MULTIPLIER
-	 *	vertical_ratio                 9.15 percent			* TourData.RUN_DYN_DATA_MULTIPLIER
+	 *	vertical_ratio                 9.15 percent		* TourData.RUN_DYN_DATA_MULTIPLIER
 	 *
 	 *	stance_time                  272.0  ms
-	 *	stance_time_balance           50.46 percent			* TourData.RUN_DYN_DATA_MULTIPLIER
+	 *	stance_time_balance           50.46 percent		* TourData.RUN_DYN_DATA_MULTIPLIER
 	 *	step_length                 1169.0  mm
 	 *	vertical_oscillation         119.0  mm				* TourData.RUN_DYN_DATA_MULTIPLIER
-	 *	vertical_ratio                 9.84 percent			* TourData.RUN_DYN_DATA_MULTIPLIER
+	 *	vertical_ratio                 9.84 percent		* TourData.RUN_DYN_DATA_MULTIPLIER
 	 *
 	 * @since Version 18.7
 	 */
+
+	@Transient
+	public short[]		runDyn_StanceTime;
+	@Transient
+	private float[] 	_runDyn_StanceTime_UI;
+
+	@Transient
+	public short[]		runDyn_StanceTimeBalance;
+	@Transient
+	private float[] 	_runDyn_StanceTimeBalance_UI;
+
+	/**
+	 * Step length in mm.<br>
+	 * Is from a device when {@link #_isRunDyn_StepLength_FromDevice} is <code>true</code>, otherwise it is computed.
+	 */
+	@Transient
+	private short[]	_runDyn_StepLength;
+	@Transient
+	private float[]	_runDyn_StepLength_UI;
+	@Transient
+	private float[]	_runDyn_StepLength_UI_Imperial;
+
+	@Transient
+	private boolean 	_isRunDyn_StepLength_FromDevice;
+
+	@Transient
+	public short[]		runDyn_VerticalOscillation;
+	@Transient
+	private float[]	_runDyn_VerticalOscillation_UI;
+	@Transient
+	private float[]	_runDyn_VerticalOscillation_UI_Imperial;
+
+	@Transient
+	public short[]		runDyn_VerticalRatio;
+	@Transient
+	private float[]	_runDyn_VerticalRatio_UI;
+
 // SET_FORMATTING_ON
-	@Transient
-	public short[]					runDyn_StanceTime;
-	@Transient
-	private float[] 				_runDyn_StanceTime_UI;
-
-	@Transient
-	public short[]					runDyn_StanceTimeBalance;
-	@Transient
-	private float[] 				_runDyn_StanceTimeBalance_UI;
-
-	@Transient
-	public short[]					runDyn_StepLength;
-	@Transient
-	private float[]															_runDyn_StepLength_UI;
-	@Transient
-	private float[]															_runDyn_StepLength_UI_Imperial;
-
-	@Transient
-	public short[]					runDyn_VerticalOscillation;
-	@Transient
-	private float[]															_runDyn_VerticalOscillation_UI;
-	@Transient
-	private float[]															_runDyn_VerticalOscillation_UI_Imperial;
-
-	@Transient
-	public short[]					runDyn_VerticalRatio;
-	@Transient
-	private float[]															_runDyn_VerticalRatio_UI;
-
 
 	public TourData() {}
 
@@ -1512,8 +1520,8 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 			if (runDyn_StanceTimeBalance != null && sumRunDyn_StanceTimeBalance == 0) {
 				sumRunDyn_StanceTimeBalance += runDyn_StanceTimeBalance[serieIndex];
 			}
-			if (runDyn_StepLength != null && sumRunDyn_StepLength == 0) {
-				sumRunDyn_StepLength += runDyn_StepLength[serieIndex];
+			if (_runDyn_StepLength != null && sumRunDyn_StepLength == 0) {
+				sumRunDyn_StepLength += _runDyn_StepLength[serieIndex];
 			}
 			if (runDyn_VerticalOscillation != null && sumRunDyn_VerticalOscillation == 0) {
 				sumRunDyn_VerticalOscillation += runDyn_VerticalOscillation[serieIndex];
@@ -1579,17 +1587,17 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 		if (sumTemperature == 0) {
 			temperatureSerie = null;
 		}
+
 		if (sumPower == 0) {
 			powerSerie = null;
 		}
-		if (sumSpeed == 0) {
-			speedSerie = null;
-		}
-
 		if (powerSerie != null) {
 			isPowerSerieFromDevice = true;
 		}
 
+		if (sumSpeed == 0) {
+			speedSerie = null;
+		}
 		if (speedSerie != null) {
 			isSpeedSerieFromDevice = true;
 		}
@@ -1611,6 +1619,9 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 
 		if (sumRunDyn_StepLength == 0) {
 			clear_RunDyn_StepLength();
+		}
+		if (_runDyn_StepLength != null) {
+			_isRunDyn_StepLength_FromDevice = true;
 		}
 
 		if (sumRunDyn_VerticalOscillation == 0) {
@@ -1644,7 +1655,7 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 
 	public void clear_RunDyn_StepLength() {
 
-		runDyn_StepLength = null;
+		_runDyn_StepLength = null;
 		runDyn_StepLength_Min = 0;
 		runDyn_StepLength_Max = 0;
 		runDyn_StepLength_Avg = 0;
@@ -1730,6 +1741,10 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 		_runDyn_VerticalOscillation_UI = null;
 		_runDyn_VerticalOscillation_UI_Imperial = null;
 		_runDyn_VerticalRatio_UI = null;
+
+		if (_isRunDyn_StepLength_FromDevice == false) {
+			_runDyn_StepLength = null;
+		}
 
 		srtmSerie = null;
 		srtmSerieImperial = null;
@@ -2960,7 +2975,7 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 		computeAvg_Temperature();
 
 		computeHrZones();
-		computeRunningDynamics();
+		computeRunDyn_0_MinMaxAvg();
 
 		computeGeo_Bounds();
 		computeGeo_Grid();
@@ -3529,11 +3544,20 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 		}
 	}
 
-	private void computeRunningDynamics() {
+	private void computeRunDyn_0_MinMaxAvg() {
 
-		/*
-		 * Stance time
-		 */
+		computeRunDyn_StanceTime();
+		computeRunDyn_StanceTimeBalance();
+		computeRunDyn_StepLength();
+		computeRunDyn_VerticalOscillation();
+		computeRunDyn_VerticalRatio();
+	}
+
+	/**
+	 * Stance time
+	 */
+	private void computeRunDyn_StanceTime() {
+
 		if (runDyn_StanceTime != null && runDyn_StanceTime.length > 0) {
 
 			short minValue;
@@ -3567,10 +3591,13 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 			runDyn_StanceTime_Max = maxValue;
 			runDyn_StanceTime_Avg = numValues == 0 ? 0 : sumValue / numValues;
 		}
+	}
 
-		/*
-		 * Stance time balance
-		 */
+	/**
+	 * Stance time balance
+	 */
+	private void computeRunDyn_StanceTimeBalance() {
+
 		if (runDyn_StanceTimeBalance != null && runDyn_StanceTimeBalance.length > 0) {
 
 			short minValue;
@@ -3604,21 +3631,24 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 			runDyn_StanceTimeBalance_Max = maxValue;
 			runDyn_StanceTimeBalance_Avg = numValues == 0 ? 0 : sumValue / numValues;
 		}
+	}
 
-		/*
-		 * Step length
-		 */
-		if (runDyn_StepLength != null && runDyn_StepLength.length > 0) {
+	/**
+	 * Step length
+	 */
+	private void computeRunDyn_StepLength() {
+
+		if (_runDyn_StepLength != null && _runDyn_StepLength.length > 0) {
 
 			short minValue;
 			short maxValue;
 
-			minValue = maxValue = getFirstNot0Value(runDyn_StepLength);
+			minValue = maxValue = getFirstNot0Value(_runDyn_StepLength);
 
 			int numValues = 0;
 			float sumValue = 0;
 
-			for (final short value : runDyn_StepLength) {
+			for (final short value : _runDyn_StepLength) {
 
 				// ignore 0 values
 				if (value == 0) {
@@ -3641,10 +3671,13 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 			runDyn_StepLength_Max = maxValue;
 			runDyn_StepLength_Avg = numValues == 0 ? 0 : sumValue / numValues;
 		}
+	}
 
-		/*
-		 * Vertical oscillation
-		 */
+	/**
+	 * Vertical oscillation
+	 */
+	private void computeRunDyn_VerticalOscillation() {
+
 		if (runDyn_VerticalOscillation != null && runDyn_VerticalOscillation.length > 0) {
 
 			short minValue;
@@ -3678,10 +3711,13 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 			runDyn_VerticalOscillation_Max = maxValue;
 			runDyn_VerticalOscillation_Avg = numValues == 0 ? 0 : sumValue / numValues;
 		}
+	}
 
-		/*
-		 * Vertical ratio
-		 */
+	/**
+	 * Vertical ratio
+	 */
+	private void computeRunDyn_VerticalRatio() {
+
 		if (runDyn_VerticalRatio != null && runDyn_VerticalRatio.length > 0) {
 
 			short minValue;
@@ -5188,7 +5224,7 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 				}
 				if (isRunDyn_StepLength) {
 					final short tdValue = timeData.runDyn_StepLength;
-					runDyn_StepLength[serieIndex] = tdValue == Short.MIN_VALUE ? 0 : tdValue;
+					_runDyn_StepLength[serieIndex] = tdValue == Short.MIN_VALUE ? 0 : tdValue;
 				}
 				if (isRunDyn_VerticalOscillation) {
 					final short tdValue = timeData.runDyn_VerticalOscillation;
@@ -6843,22 +6879,73 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 	 */
 	public float[] getRunDyn_StepLength() {
 
+		if (_runDyn_StepLength == null) {
+
+			if (timeSerie != null && timeSerie.length > 1 //
+					&& distanceSerie != null && distanceSerie.length > 1 //
+					&& cadenceSerie != null && cadenceSerie.length > 1) {
+
+				// compute step length from cadence/time/distance
+
+				// values are computed
+				_isRunDyn_StepLength_FromDevice = false;
+
+				final float[] cadenceData = getCadenceSerie();
+
+				_runDyn_StepLength = new short[timeSerie.length];
+
+				float prevTime = timeSerie[0];
+				float prevDistance = distanceSerie[0];
+				float prevCadence = cadenceData[0];
+
+				for (int serieIndex = 1; serieIndex < timeSerie.length; serieIndex++) {
+
+					final float time = timeSerie[serieIndex];
+					final float distance = distanceSerie[serieIndex];
+					final float cadence = cadenceData[serieIndex];
+
+					if (cadence == 0) {
+
+						_runDyn_StepLength[serieIndex] = 0;
+
+					} else {
+
+						final float distanceDiff = distance - prevDistance;
+						final float timeDiff = time - prevTime;
+
+						final float revolutionTotal = cadence / 60 * timeDiff;
+
+						_runDyn_StepLength[serieIndex] = (short) (distanceDiff * 1000 / revolutionTotal);
+					}
+
+					prevTime = time;
+					prevDistance = distance;
+					prevCadence = cadence;
+				}
+
+				// stride length with rule of 3
+//				final float revolutionTotal =  segmentAvgCadence / 60 * segment.time_Driving;
+//				segment.strideLength = segment.distance_Diff / revolutionTotal;
+
+			}
+		}
+
 		if (UI.UNIT_VALUE_DISTANCE == 1) {
 
 			// use metric system
 
 			if (_runDyn_StepLength_UI == null) {
 
-				if (runDyn_StepLength != null) {
+				if (_runDyn_StepLength != null) {
 
 					// create UI data serie
 
-					final int serieSize = runDyn_StepLength.length;
+					final int serieSize = _runDyn_StepLength.length;
 
 					_runDyn_StepLength_UI = new float[serieSize];
 
 					for (int serieIndex = 0; serieIndex < serieSize; serieIndex++) {
-						_runDyn_StepLength_UI[serieIndex] = runDyn_StepLength[serieIndex];
+						_runDyn_StepLength_UI[serieIndex] = _runDyn_StepLength[serieIndex];
 					}
 				}
 			}
@@ -6871,16 +6958,16 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 
 			if (_runDyn_StepLength_UI_Imperial == null) {
 
-				if (runDyn_StepLength != null) {
+				if (_runDyn_StepLength != null) {
 
 					// create UI data serie
 
-					final int serieSize = runDyn_StepLength.length;
+					final int serieSize = _runDyn_StepLength.length;
 
 					_runDyn_StepLength_UI_Imperial = new float[serieSize];
 
 					for (int serieIndex = 0; serieIndex < serieSize; serieIndex++) {
-						_runDyn_StepLength_UI_Imperial[serieIndex] = runDyn_StepLength[serieIndex] * UI.UNIT_VALUE_DISTANCE_MM_OR_INCH;
+						_runDyn_StepLength_UI_Imperial[serieIndex] = _runDyn_StepLength[serieIndex] * UI.UNIT_VALUE_DISTANCE_MM_OR_INCH;
 					}
 				}
 			}
@@ -6899,6 +6986,13 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 
 	public short getRunDyn_StepLength_Min() {
 		return runDyn_StepLength_Min;
+	}
+
+	/**
+	 * @return Returns metric values of step length
+	 */
+	public short[] getRunDyn_StepLength_Raw() {
+		return _runDyn_StepLength;
 	}
 
 	/**
@@ -7671,6 +7765,10 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 		return isPulseSensorPresent == 1;
 	}
 
+	public boolean isRunDyn_StepLength_FromDevice() {
+		return _isRunDyn_StepLength_FromDevice;
+	}
+
 	/**
 	 * @return Returns <code>true</code> when running dynamics data are available
 	 */
@@ -7684,7 +7782,7 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 			return true;
 		}
 
-		if (runDyn_StepLength != null && runDyn_StepLength.length > 0) {
+		if (_runDyn_StepLength != null && _runDyn_StepLength.length > 0) {
 			return true;
 		}
 
@@ -7911,7 +8009,7 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 
 		runDyn_StanceTime = serieData.runDyn_StanceTime;
 		runDyn_StanceTimeBalance = serieData.runDyn_StanceTimeBalance;
-		runDyn_StepLength = serieData.runDyn_StepLength;
+		_runDyn_StepLength = serieData.runDyn_StepLength;
 		runDyn_VerticalOscillation = serieData.runDyn_VerticalOscillation;
 		runDyn_VerticalRatio = serieData.runDyn_VerticalRatio;
 
@@ -7921,6 +8019,10 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 
 		if (speedSerie != null) {
 			isSpeedSerieFromDevice = true;
+		}
+
+		if (_runDyn_StepLength != null) {
+			_isRunDyn_StepLength_FromDevice = true;
 		}
 	}
 
@@ -7963,9 +8065,13 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 
 		serieData.runDyn_StanceTime = runDyn_StanceTime;
 		serieData.runDyn_StanceTimeBalance = runDyn_StanceTimeBalance;
-		serieData.runDyn_StepLength = runDyn_StepLength;
 		serieData.runDyn_VerticalRatio = runDyn_VerticalRatio;
 		serieData.runDyn_VerticalOscillation = runDyn_VerticalOscillation;
+
+		// don't save computed data series
+		if (_isRunDyn_StepLength_FromDevice) {
+			serieData.runDyn_StepLength = _runDyn_StepLength;
+		}
 
 		/*
 		 * time serie size
@@ -8400,6 +8506,15 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 
 	public void setRestPulse(final int restPulse) {
 		this.restPulse = restPulse;
+	}
+
+	public void setRunDyn_StepLength(final short[] runDyn_StepLength) {
+		this._runDyn_StepLength = runDyn_StepLength;
+		this._isRunDyn_StepLength_FromDevice = true;
+	}
+
+	public void setRunDyn_StepLength_Raw(final short[] runDyn_StepLength_Raw) {
+		_runDyn_StepLength = runDyn_StepLength_Raw;
 	}
 
 	private void setSpeed(	final int serieIndex,
@@ -9087,7 +9202,7 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 
 					// data are available, starting values are set to first valid value
 
-					runDyn_StepLength = new short[serieSize];
+					_runDyn_StepLength = new short[serieSize];
 					isAvailable = true;
 
 					for (int invalidIndex = 0; invalidIndex < timeDataIndex; invalidIndex++) {
@@ -9101,9 +9216,11 @@ public class TourData implements Comparable<Object>, IXmlSerializable, Cloneable
 
 			// data are available
 
-			runDyn_StepLength = new short[serieSize];
+			_runDyn_StepLength = new short[serieSize];
 			isAvailable = true;
 		}
+
+		_isRunDyn_StepLength_FromDevice = isAvailable;
 
 		return isAvailable;
 	}

@@ -1,14 +1,14 @@
 /*******************************************************************************
  * Copyright (C) 2005, 2018 Wolfgang Schramm and Contributors
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation version 2 of the License.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with
  * this program; if not, write to the Free Software Foundation,
  * Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110, USA
@@ -30,28 +30,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-
-import net.tourbook.Messages;
-import net.tourbook.application.PerspectiveFactoryRawData;
-import net.tourbook.application.TourbookPlugin;
-import net.tourbook.common.UI;
-import net.tourbook.common.time.TimeTools;
-import net.tourbook.common.util.ITourViewer3;
-import net.tourbook.common.util.Util;
-import net.tourbook.common.widgets.ComboEnumEntry;
-import net.tourbook.data.TourData;
-import net.tourbook.data.TourPerson;
-import net.tourbook.data.TourTag;
-import net.tourbook.data.TourType;
-import net.tourbook.preferences.ITourbookPreferences;
-import net.tourbook.tour.TourEventId;
-import net.tourbook.tour.TourLogManager;
-import net.tourbook.tour.TourLogState;
-import net.tourbook.tour.TourLogView;
-import net.tourbook.tour.TourManager;
-import net.tourbook.ui.views.rawData.RawDataView;
-import net.tourbook.ui.views.tourBook.TVITourBookTour;
-import net.tourbook.ui.views.tourDataEditor.TourDataEditorView;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -75,6 +53,28 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.WorkbenchException;
+
+import net.tourbook.Messages;
+import net.tourbook.application.PerspectiveFactoryRawData;
+import net.tourbook.application.TourbookPlugin;
+import net.tourbook.common.UI;
+import net.tourbook.common.time.TimeTools;
+import net.tourbook.common.util.ITourViewer3;
+import net.tourbook.common.util.Util;
+import net.tourbook.common.widgets.ComboEnumEntry;
+import net.tourbook.data.TourData;
+import net.tourbook.data.TourPerson;
+import net.tourbook.data.TourTag;
+import net.tourbook.data.TourType;
+import net.tourbook.preferences.ITourbookPreferences;
+import net.tourbook.tour.TourEventId;
+import net.tourbook.tour.TourLogManager;
+import net.tourbook.tour.TourLogState;
+import net.tourbook.tour.TourLogView;
+import net.tourbook.tour.TourManager;
+import net.tourbook.ui.views.rawData.RawDataView;
+import net.tourbook.ui.views.tourBook.TVITourBookTour;
+import net.tourbook.ui.views.tourDataEditor.TourDataEditorView;
 
 public class RawDataManager {
 
@@ -136,24 +136,24 @@ public class RawDataManager {
 	/**
 	 * Contains tours which are imported or received and displayed in the import view.
 	 */
-	private final HashMap<Long, TourData>	_toursInImportView					= new HashMap<Long, TourData>();
+	private final HashMap<Long, TourData>	_toursInImportView					= new HashMap<>();
 
 	/**
 	 * Contains tours which are imported from the last file name.
 	 */
-	private final HashMap<Long, TourData>	_newlyImportedTours					= new HashMap<Long, TourData>();
+	private final HashMap<Long, TourData>	_newlyImportedTours					= new HashMap<>();
 
 	private String							_lastImportedFileName;
 
 	/**
 	 * Contains the filenames for all imported files which are displayed in the import view
 	 */
-	private final HashSet<String>			_importedFileNames					= new HashSet<String>();
+	private final HashSet<String>			_importedFileNames					= new HashSet<>();
 
 	/**
 	 * Contains filenames which are not directly imported but is imported from other imported files
 	 */
-	private final HashSet<String>			_importedFileNamesChildren			= new HashSet<String>();
+	private final HashSet<String>			_importedFileNamesChildren			= new HashSet<>();
 
 	private boolean							_isImported;
 	private boolean							_isImportCanceled;
@@ -170,8 +170,8 @@ public class RawDataManager {
 
 	private HashMap<String, TourbookDevice>	_devicesByExtension;
 
-	private final ArrayList<TourType>		_tempTourTypes						= new ArrayList<TourType>();
-	private final ArrayList<TourTag>		_tempTourTags						= new ArrayList<TourTag>();
+	private final ArrayList<TourType>		_tempTourTypes						= new ArrayList<>();
+	private final ArrayList<TourTag>		_tempTourTags						= new ArrayList<>();
 
 	/**
 	 * Filepath from the previous reimported tour
@@ -1019,12 +1019,12 @@ public class RawDataManager {
 				}
 
 //SET_FORMATTING_OFF
-				
+
 				oldTourData.setPower_Avg(							reimportedTourData.getPower_Avg());
 				oldTourData.setPower_Max(							reimportedTourData.getPower_Max());
 				oldTourData.setPower_Normalized(					reimportedTourData.getPower_Normalized());
 				oldTourData.setPower_FTP(							reimportedTourData.getPower_FTP());
-				
+
 				oldTourData.setPower_TotalWork(						reimportedTourData.getPower_TotalWork());
 				oldTourData.setPower_TrainingStressScore(			reimportedTourData.getPower_TrainingStressScore());
 				oldTourData.setPower_IntensityFactor(				reimportedTourData.getPower_IntensityFactor());
@@ -1034,7 +1034,7 @@ public class RawDataManager {
 				oldTourData.setPower_AvgLeftTorqueEffectiveness(	reimportedTourData.getPower_AvgLeftTorqueEffectiveness());
 				oldTourData.setPower_AvgRightPedalSmoothness(		reimportedTourData.getPower_AvgRightPedalSmoothness());
 				oldTourData.setPower_AvgRightTorqueEffectiveness(	reimportedTourData.getPower_AvgRightTorqueEffectiveness());
-				
+
 //SET_FORMATTING_ON
 			}
 		}
@@ -1069,9 +1069,13 @@ public class RawDataManager {
 
 			oldTourData.runDyn_StanceTime = reimportedTourData.runDyn_StanceTime;
 			oldTourData.runDyn_StanceTimeBalance = reimportedTourData.runDyn_StanceTimeBalance;
-			oldTourData.runDyn_StepLength = reimportedTourData.runDyn_StepLength;
 			oldTourData.runDyn_VerticalOscillation = reimportedTourData.runDyn_VerticalOscillation;
 			oldTourData.runDyn_VerticalRatio = reimportedTourData.runDyn_VerticalRatio;
+
+			final boolean isDeviceStepLength = reimportedTourData.isRunDyn_StepLength_FromDevice();
+			if (isDeviceStepLength) {
+				oldTourData.setRunDyn_StepLength_Raw(reimportedTourData.getRunDyn_StepLength_Raw());
+			}
 		}
 
 		// TEMPERATURE
@@ -1109,7 +1113,7 @@ public class RawDataManager {
 
 		if (_devicesBySortPriority == null) {
 
-			_devicesBySortPriority = new ArrayList<TourbookDevice>(DeviceManager.getDeviceList());
+			_devicesBySortPriority = new ArrayList<>(DeviceManager.getDeviceList());
 
 			// sort device list by sorting priority
 			Collections.sort(_devicesBySortPriority, new Comparator<TourbookDevice>() {
@@ -1128,7 +1132,7 @@ public class RawDataManager {
 				}
 			});
 
-			_devicesByExtension = new HashMap<String, TourbookDevice>();
+			_devicesByExtension = new HashMap<>();
 
 			for (final TourbookDevice device : _devicesBySortPriority) {
 				_devicesByExtension.put(device.fileExtension.toLowerCase(), device);
@@ -1179,7 +1183,7 @@ public class RawDataManager {
 	/**
 	 * Import a tour from a file, all imported tours can be retrieved with
 	 * {@link #getImportedTours()}
-	 * 
+	 *
 	 * @param importFile
 	 *            the file to be imported
 	 * @param destinationPath
@@ -1244,7 +1248,7 @@ public class RawDataManager {
 			public void run() {
 
 				boolean isDataImported = false;
-				final ArrayList<String> additionalImportedFiles = new ArrayList<String>();
+				final ArrayList<String> additionalImportedFiles = new ArrayList<>();
 
 				/*
 				 * try to import from all devices which have the defined extension
@@ -1352,7 +1356,7 @@ public class RawDataManager {
 
 	/**
 	 * import the raw data of the given file
-	 * 
+	 *
 	 * @param device
 	 *            the device which is able to process the data of the file
 	 * @param sourceFileName
@@ -1720,7 +1724,7 @@ public class RawDataManager {
 				setImportId();
 
 				int importCounter = 0;
-				final ArrayList<String> notImportedFiles = new ArrayList<String>();
+				final ArrayList<String> notImportedFiles = new ArrayList<>();
 
 				// loop: import all selected files
 				for (final ImportFile filePath : importFilePaths) {
@@ -1885,7 +1889,7 @@ public class RawDataManager {
 	/**
 	 * Update {@link TourData} from the database for all imported tours which are displayed in the
 	 * import view, a progress dialog is displayed.
-	 * 
+	 *
 	 * @param monitor
 	 */
 	public void updateTourData_InImportView_FromDb(final IProgressMonitor monitor) {
@@ -2008,7 +2012,7 @@ public class RawDataManager {
 
 	/**
 	 * Updates the model with modified tours
-	 * 
+	 *
 	 * @param modifiedTours
 	 */
 	public void updateTourDataModel(final ArrayList<TourData> modifiedTours) {

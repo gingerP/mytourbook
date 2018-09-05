@@ -25,6 +25,29 @@ import java.util.Formatter;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.ListenerList;
+import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.preference.PreferenceConverter;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.osgi.util.NLS;
+import org.eclipse.swt.custom.BusyIndicator;
+import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IViewReference;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
+
 import net.tourbook.Messages;
 import net.tourbook.application.TourbookPlugin;
 import net.tourbook.chart.Chart;
@@ -64,122 +87,99 @@ import net.tourbook.ui.tourChart.X_AXIS_START_TIME;
 import net.tourbook.ui.views.TourChartAnalyzerInfo;
 import net.tourbook.ui.views.tourDataEditor.TourDataEditorView;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.ListenerList;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.dialogs.ProgressMonitorDialog;
-import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.preference.PreferenceConverter;
-import org.eclipse.jface.util.IPropertyChangeListener;
-import org.eclipse.jface.util.PropertyChangeEvent;
-import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.osgi.util.NLS;
-import org.eclipse.swt.custom.BusyIndicator;
-import org.eclipse.swt.graphics.RGB;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IViewPart;
-import org.eclipse.ui.IViewReference;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchPart;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
-
 public class TourManager {
 
 // SET_FORMATTING_OFF
-	
-	private static final String	GRAPH_LABEL_ALTIMETER							= net.tourbook.common.Messages.Graph_Label_Altimeter;
-	private static final String	GRAPH_LABEL_ALTITUDE							= net.tourbook.common.Messages.Graph_Label_Altitude;
-	private static final String	GRAPH_LABEL_CADENCE								= net.tourbook.common.Messages.Graph_Label_Cadence;
-	private static final String	GRAPH_LABEL_CADENCE_UNIT						= net.tourbook.common.Messages.Graph_Label_Cadence_Unit;
-	private static final String	GRAPH_LABEL_CADENCE_UNIT_SPM					= net.tourbook.common.Messages.Graph_Label_Cadence_Unit_Spm;
-	private static final String	GRAPH_LABEL_CADENCE_UNIT_RPM_SPM				= net.tourbook.common.Messages.Graph_Label_Cadence_Unit_RpmSpm;
-	private static final String	GRAPH_LABEL_GEARS								= net.tourbook.common.Messages.Graph_Label_Gears;
-	private static final String	GRAPH_LABEL_GEO_COMPARE_UNIT					= net.tourbook.common.Messages.Graph_Label_Geo_Compare_Unit;
-	private static final String	GRAPH_LABEL_GRADIENT							= net.tourbook.common.Messages.Graph_Label_Gradient;
-	private static final String	GRAPH_LABEL_GRADIENT_UNIT						= net.tourbook.common.Messages.Graph_Label_Gradient_Unit;
-	private static final String	GRAPH_LABEL_HEARTBEAT							= net.tourbook.common.Messages.Graph_Label_Heartbeat;
-	private static final String	GRAPH_LABEL_HEARTBEAT_UNIT						= net.tourbook.common.Messages.Graph_Label_Heartbeat_Unit;
-	private static final String	GRAPH_LABEL_PACE								= net.tourbook.common.Messages.Graph_Label_Pace;
-	private static final String	GRAPH_LABEL_POWER								= net.tourbook.common.Messages.Graph_Label_Power;
-	private static final String	GRAPH_LABEL_POWER_UNIT							= net.tourbook.common.Messages.Graph_Label_Power_Unit;
-	private static final String	GRAPH_LABEL_SPEED								= net.tourbook.common.Messages.Graph_Label_Speed;
-	private static final String	GRAPH_LABEL_TEMPERATURE							= net.tourbook.common.Messages.Graph_Label_Temperature;
-	private static final String	GRAPH_LABEL_TOUR_COMPARE						= net.tourbook.common.Messages.Graph_Label_Tour_Compare;
-	private static final String	GRAPH_LABEL_TOUR_COMPARE_UNIT					= net.tourbook.common.Messages.Graph_Label_Tour_Compare_Unit;
-	private static final String	GRAPH_LABEL_RUN_DYN_STANCE_TIME					= net.tourbook.common.Messages.Graph_Label_RunDyn_StanceTime;
+
+	private static final String	GRAPH_LABEL_ALTIMETER									= net.tourbook.common.Messages.Graph_Label_Altimeter;
+	private static final String	GRAPH_LABEL_ALTITUDE										= net.tourbook.common.Messages.Graph_Label_Altitude;
+	private static final String	GRAPH_LABEL_CADENCE										= net.tourbook.common.Messages.Graph_Label_Cadence;
+	private static final String	GRAPH_LABEL_CADENCE_UNIT								= net.tourbook.common.Messages.Graph_Label_Cadence_Unit;
+	private static final String	GRAPH_LABEL_CADENCE_UNIT_SPM							= net.tourbook.common.Messages.Graph_Label_Cadence_Unit_Spm;
+	private static final String	GRAPH_LABEL_CADENCE_UNIT_RPM_SPM						= net.tourbook.common.Messages.Graph_Label_Cadence_Unit_RpmSpm;
+	private static final String	GRAPH_LABEL_GEARS											= net.tourbook.common.Messages.Graph_Label_Gears;
+	private static final String	GRAPH_LABEL_GEO_COMPARE_UNIT							= net.tourbook.common.Messages.Graph_Label_Geo_Compare_Unit;
+	private static final String	GRAPH_LABEL_GRADIENT										= net.tourbook.common.Messages.Graph_Label_Gradient;
+	private static final String	GRAPH_LABEL_GRADIENT_UNIT								= net.tourbook.common.Messages.Graph_Label_Gradient_Unit;
+	private static final String	GRAPH_LABEL_HEARTBEAT									= net.tourbook.common.Messages.Graph_Label_Heartbeat;
+	private static final String	GRAPH_LABEL_HEARTBEAT_UNIT								= net.tourbook.common.Messages.Graph_Label_Heartbeat_Unit;
+	private static final String	GRAPH_LABEL_PACE											= net.tourbook.common.Messages.Graph_Label_Pace;
+	private static final String	GRAPH_LABEL_POWER											= net.tourbook.common.Messages.Graph_Label_Power;
+	private static final String	GRAPH_LABEL_POWER_UNIT									= net.tourbook.common.Messages.Graph_Label_Power_Unit;
+	private static final String	GRAPH_LABEL_SPEED											= net.tourbook.common.Messages.Graph_Label_Speed;
+	private static final String	GRAPH_LABEL_TEMPERATURE									= net.tourbook.common.Messages.Graph_Label_Temperature;
+	private static final String	GRAPH_LABEL_TOUR_COMPARE								= net.tourbook.common.Messages.Graph_Label_Tour_Compare;
+	private static final String	GRAPH_LABEL_TOUR_COMPARE_UNIT							= net.tourbook.common.Messages.Graph_Label_Tour_Compare_Unit;
+	private static final String	GRAPH_LABEL_RUN_DYN_STANCE_TIME						= net.tourbook.common.Messages.Graph_Label_RunDyn_StanceTime;
 	private static final String	GRAPH_LABEL_RUN_DYN_STANCE_TIME_BALANCE			= net.tourbook.common.Messages.Graph_Label_RunDyn_StanceTimeBalance;
-	private static final String	GRAPH_LABEL_RUN_DYN_STEP_LENGTH					= net.tourbook.common.Messages.Graph_Label_RunDyn_StepLength;
-	private static final String	GRAPH_LABEL_RUN_DYN_VERTICAL_OSCILLATION		= net.tourbook.common.Messages.Graph_Label_RunDyn_VerticalOscillation;
-	private static final String	GRAPH_LABEL_RUN_DYN_VERTICAL_RATIO				= net.tourbook.common.Messages.Graph_Label_RunDyn_VerticalRatio;
+	private static final String	GRAPH_LABEL_RUN_DYN_STEP_LENGTH						= net.tourbook.common.Messages.Graph_Label_RunDyn_StepLength;
+	private static final String	GRAPH_LABEL_RUN_DYN_VERTICAL_OSCILLATION			= net.tourbook.common.Messages.Graph_Label_RunDyn_VerticalOscillation;
+	private static final String	GRAPH_LABEL_RUN_DYN_VERTICAL_RATIO					= net.tourbook.common.Messages.Graph_Label_RunDyn_VerticalRatio;
 	//
-	public static final String	LOG_TEMP_ADJUST_001_START						= Messages.Log_TemperatureAdjustment_001_Start;
-	public static final String	LOG_TEMP_ADJUST_002_END							= Messages.Log_TemperatureAdjustment_002_End;
-	public static final String	LOG_TEMP_ADJUST_003_TOUR_CHANGES				= Messages.Log_TemperatureAdjustment_003_TourChanges;
-	public static final String	LOG_TEMP_ADJUST_005_TOUR_IS_TOO_SHORT			= Messages.Log_TemperatureAdjustment_005_TourIsTooShort;
-	public static final String	LOG_TEMP_ADJUST_006_IS_ABOVE_TEMPERATURE		= Messages.Log_TemperatureAdjustment_006_IsAboveTemperature;
-	public static final String	LOG_TEMP_ADJUST_010_NO_TEMPERATURE_DATA_SERIE	= Messages.Log_TemperatureAdjustment_010_NoTemperatureDataSeries;
-	public static final String	LOG_TEMP_ADJUST_011_NO_TIME_DATA_SERIE			= Messages.Log_TemperatureAdjustment_011_NoTimeDataSeries;
-	//
-	public static final String	CUSTOM_DATA_TOUR_DATA							= "tourData";							//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_TOUR_CHART_CONFIGURATION			= "tourChartConfig";					//$NON-NLS-1$
-	//
-	public static final String	CUSTOM_DATA_ALTIMETER							= "altimeter";							//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_ALTITUDE							= "altitude";							//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_CADENCE								= "cadence";							//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_DISTANCE							= "distance";							//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_GEAR_RATIO							= "gearRatio";							//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_GRADIENT							= "gradient";							//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_HISTORY								= "history";							//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_PACE								= "pace";								//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_POWER								= "power";								//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_PULSE								= "pulse";								//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_SPEED								= "speed";								//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_TEMPERATURE							= "temperature";						//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_TIME								= "time";								//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_SEGMENT_VALUES						= "segmentValues";						//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_ANALYZER_INFO						= "analyzerInfo";						//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_CONCONI_TEST						= "CUSTOM_DATA_CONCONI_TEST";			//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_RUN_DYN_STANCE_TIME					= "runDyn_RunDyn_StanceTime";			//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_RUN_DYN_STANCE_TIME_BALANCE			= "runDyn_RunDyn_StanceTimeBalance";	//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_RUN_DYN_STEP_LENGTH					= "runDyn_RunDyn_StepLength";			//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_RUN_DYN_VERTICAL_OSCILLATION		= "runDyn_RunDyn_VerticalOscillation";	//$NON-NLS-1$
-	public static final String	CUSTOM_DATA_RUN_DYN_VERTICAL_RATIO				= "runDyn_RunDyn_VerticalRatio";		//$NON-NLS-1$
-	//
-	public static final String	X_AXIS_TIME										= "time";								//$NON-NLS-1$
-	public static final String	X_AXIS_DISTANCE									= "distance";							//$NON-NLS-1$
-	//
-	private final static String	FORMAT_MM_SS									= "%d:%02d";							//$NON-NLS-1$
-	public static final String	GEAR_TEETH_FORMAT								= "%2d:%2d";							//$NON-NLS-1$
-	public static final String	GEAR_VALUE_FORMAT								= GEAR_TEETH_FORMAT + " - %1.2f";		//$NON-NLS-1$
-	//
-	public static final int		GRAPH_ALTITUDE									= 1000;
-	public static final int		GRAPH_SPEED										= 1001;
-	public static final int		GRAPH_ALTIMETER									= 1002;
-	public static final int		GRAPH_PULSE										= 1003;
-	public static final int		GRAPH_TEMPERATURE								= 1004;
-	public static final int		GRAPH_CADENCE									= 1005;
-	public static final int		GRAPH_GRADIENT									= 1006;
-	public static final int		GRAPH_POWER										= 1007;
-	public static final int		GRAPH_PACE										= 1008;
-	public static final int		GRAPH_GEARS										= 1009;
-	
-	public static final int		GRAPH_RUN_DYN_STANCE_TIME						= 1100;
-	public static final int		GRAPH_RUN_DYN_STANCE_TIME_BALANCED				= 1101;
-	public static final int		GRAPH_RUN_DYN_STEP_LENGTH						= 1102;
-	public static final int		GRAPH_RUN_DYN_VERTICAL_OSCILLATION				= 1103;
-	public static final int		GRAPH_RUN_DYN_VERTICAL_RATIO					= 1104;
-	
-	public static final int		GRAPH_TOUR_COMPARE								= 2000;
-	
 // SET_FORMATTING_ON
+	//
+	public static final String		LOG_TEMP_ADJUST_001_START								= Messages.Log_TemperatureAdjustment_001_Start;
+	public static final String		LOG_TEMP_ADJUST_002_END									= Messages.Log_TemperatureAdjustment_002_End;
+	public static final String		LOG_TEMP_ADJUST_003_TOUR_CHANGES						= Messages.Log_TemperatureAdjustment_003_TourChanges;
+	public static final String		LOG_TEMP_ADJUST_005_TOUR_IS_TOO_SHORT				= Messages.Log_TemperatureAdjustment_005_TourIsTooShort;
+	public static final String		LOG_TEMP_ADJUST_006_IS_ABOVE_TEMPERATURE			= Messages.Log_TemperatureAdjustment_006_IsAboveTemperature;
+	public static final String		LOG_TEMP_ADJUST_010_NO_TEMPERATURE_DATA_SERIE	= Messages.Log_TemperatureAdjustment_010_NoTemperatureDataSeries;
+	public static final String		LOG_TEMP_ADJUST_011_NO_TIME_DATA_SERIE				= Messages.Log_TemperatureAdjustment_011_NoTimeDataSeries;
+	//
+	public static final String		CUSTOM_DATA_TOUR_DATA									= "tourData";																			//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_TOUR_CHART_CONFIGURATION				= "tourChartConfig";																	//$NON-NLS-1$
+	//
+	public static final String		CUSTOM_DATA_ALTIMETER									= "altimeter";																			//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_ALTITUDE										= "altitude";																			//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_CADENCE										= "cadence";																			//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_DISTANCE										= "distance";																			//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_GEAR_RATIO									= "gearRatio";																			//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_GRADIENT										= "gradient";																			//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_HISTORY										= "history";																			//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_PACE											= "pace";																				//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_POWER											= "power";																				//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_PULSE											= "pulse";																				//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_SPEED											= "speed";																				//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_TEMPERATURE									= "temperature";																		//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_TIME											= "time";																				//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_SEGMENT_VALUES								= "segmentValues";																	//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_ANALYZER_INFO								= "analyzerInfo";																		//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_CONCONI_TEST								= "CUSTOM_DATA_CONCONI_TEST";														//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_RUN_DYN_STANCE_TIME						= "runDyn_RunDyn_StanceTime";														//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_RUN_DYN_STANCE_TIME_BALANCE			= "runDyn_RunDyn_StanceTimeBalance";											//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_RUN_DYN_STEP_LENGTH						= "runDyn_RunDyn_StepLength";														//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_RUN_DYN_VERTICAL_OSCILLATION			= "runDyn_RunDyn_VerticalOscillation";											//$NON-NLS-1$
+	public static final String		CUSTOM_DATA_RUN_DYN_VERTICAL_RATIO					= "runDyn_RunDyn_VerticalRatio";													//$NON-NLS-1$
+	//
+	public static final String		X_AXIS_TIME													= "time";																				//$NON-NLS-1$
+	public static final String		X_AXIS_DISTANCE											= "distance";																			//$NON-NLS-1$
+	//
+	private final static String	FORMAT_MM_SS												= "%d:%02d";																			//$NON-NLS-1$
+	public static final String		GEAR_TEETH_FORMAT											= "%2d:%2d";																			//$NON-NLS-1$
+	public static final String		GEAR_VALUE_FORMAT											= GEAR_TEETH_FORMAT + " - %1.2f";												//$NON-NLS-1$
+	//
+	public static final int			GRAPH_ALTITUDE												= 1000;
+	public static final int			GRAPH_SPEED													= 1001;
+	public static final int			GRAPH_ALTIMETER											= 1002;
+	public static final int			GRAPH_PULSE													= 1003;
+	public static final int			GRAPH_TEMPERATURE											= 1004;
+	public static final int			GRAPH_CADENCE												= 1005;
+	public static final int			GRAPH_GRADIENT												= 1006;
+	public static final int			GRAPH_POWER													= 1007;
+	public static final int			GRAPH_PACE													= 1008;
+	public static final int			GRAPH_GEARS													= 1009;
+
+	public static final int			GRAPH_RUN_DYN_STANCE_TIME								= 1100;
+	public static final int			GRAPH_RUN_DYN_STANCE_TIME_BALANCED					= 1101;
+	public static final int			GRAPH_RUN_DYN_STEP_LENGTH								= 1102;
+	public static final int			GRAPH_RUN_DYN_VERTICAL_OSCILLATION					= 1103;
+	public static final int			GRAPH_RUN_DYN_VERTICAL_RATIO							= 1104;
+
+	public static final int			GRAPH_TOUR_COMPARE										= 2000;
 
 	static {}
 
-	private static final int[]				_allGraphIDs		= new int[] {
+	private static final int[]										_allGraphIDs			= new int[] {
 
 			GRAPH_ALTITUDE,
 			GRAPH_SPEED,
@@ -201,54 +201,52 @@ public class TourManager {
 			GRAPH_TOUR_COMPARE
 	};
 
-	private final static IPreferenceStore	_prefStore			= TourbookPlugin.getPrefStore();
+	private final static IPreferenceStore						_prefStore				= TourbookPlugin.getPrefStore();
 
-	private static TourManager				_instance;
+	private static TourManager										_instance;
 
-	private final static StringBuilder		_sbFormatter		= new StringBuilder();
-	private final static Formatter			_formatter			= new Formatter(_sbFormatter);
+	private final static StringBuilder							_sbFormatter			= new StringBuilder();
+	private final static Formatter								_formatter				= new Formatter(_sbFormatter);
 
 	/**
-	 * contains the instance of the {@link TourDataEditorView} or <code>null</code> when this part
-	 * is not opened
+	 * contains the instance of the {@link TourDataEditorView} or <code>null</code> when this part is
+	 * not opened
 	 */
-	private static TourDataEditorView		_tourDataEditorInstance;
+	private static TourDataEditorView							_tourDataEditorInstance;
 	//
-	private static LabelProviderMMSS		_labelProviderMMSS	= new LabelProviderMMSS();
-	private static LabelProviderInt			_labelProviderInt	= new LabelProviderInt();
+	private static LabelProviderMMSS								_labelProviderMMSS	= new LabelProviderMMSS();
+	private static LabelProviderInt								_labelProviderInt		= new LabelProviderInt();
 	//
-	private static TourData					_multipleTourData;
-	private static ArrayList<TourData>		_multipleTourData_List;
-	private static int						_multipleTourDataHash;
-	private static int						_multipleTourData_List_Hash;
-	private static long						_multipleTourData_List_Key;
+	private static TourData											_multipleTourData;
+	private static ArrayList<TourData>							_multipleTourData_List;
+	private static int												_multipleTourDataHash;
+	private static int												_multipleTourData_List_Hash;
+	private static long												_multipleTourData_List_Key;
 	//
-	private static final ListenerList		_tourEventListeners	= new ListenerList(ListenerList.IDENTITY);
-	private static final ListenerList		_tourSaveListeners	= new ListenerList(ListenerList.IDENTITY);
+	private static final ListenerList<ITourEventListener>	_tourEventListeners	= new ListenerList<>(ListenerList.IDENTITY);
+	private static final ListenerList<ITourSaveListener>	_tourSaveListeners	= new ListenerList<>(ListenerList.IDENTITY);
 	//
-//	private static AtomicInteger			_tourCopyCounter	= new AtomicInteger();
+	private ComputeChartValue										_computeAvg_Altimeter;
+	private ComputeChartValue										_computeAvg_Altitude;
+	private ComputeChartValue										_computeAvg_Cadence;
+	private ComputeChartValue										_computeAvg_Gradient;
+	private ComputeChartValue										_computeAvg_Pace;
+	private ComputeChartValue										_computeAvg_Power;
+	private ComputeChartValue										_computeAvg_Pulse;
+	private ComputeChartValue										_computeAvg_Speed;
 	//
-	private ComputeChartValue				_computeAvg_Altimeter;
-	private ComputeChartValue				_computeAvg_Altitude;
-	private ComputeChartValue				_computeAvg_Cadence;
-	private ComputeChartValue				_computeAvg_Gradient;
-	private ComputeChartValue				_computeAvg_Pace;
-	private ComputeChartValue				_computeAvg_Power;
-	private ComputeChartValue				_computeAvg_Pulse;
-	private ComputeChartValue				_computeAvg_Speed;
+	private ComputeChartValue										_computeAvg_RunDyn_StanceTime;
+	private ComputeChartValue										_computeAvg_RunDyn_StanceTimeBalance;
+	private ComputeChartValue										_computeAvg_RunDyn_StepLength;
+	private ComputeChartValue										_computeAvg_RunDyn_VerticalOscillation;
+	private ComputeChartValue										_computeAvg_RunDyn_VerticalRatio;
 	//
-	private ComputeChartValue				_computeAvg_RunDyn_StanceTime;
-	private ComputeChartValue				_computeAvg_RunDyn_StanceTimeBalance;
-	private ComputeChartValue				_computeAvg_RunDyn_StepLength;
-	private ComputeChartValue				_computeAvg_RunDyn_VerticalOscillation;
-	private ComputeChartValue				_computeAvg_RunDyn_VerticalRatio;
-	//
-	private final TourDataCache				_tourDataCache;
+	private final TourDataCache									_tourDataCache;
 
 	/**
 	 * tour chart which shows the selected tour
 	 */
-	private TourChart						_activeTourChart;
+	private TourChart													_activeTourChart;
 
 	public static class LabelProviderInt implements IValueLabelProvider {
 
@@ -292,9 +290,9 @@ public class TourManager {
 			/**
 			 * VERY IMPORTANT
 			 * <p>
-			 * When cache size is 0, each time when the same tour is requested from the tour
-			 * manager, a new TourData entity is created. So each opened view gets a new tourdata
-			 * for the same tour which causes LOTs of troubles.
+			 * When cache size is 0, each time when the same tour is requested from the tour manager, a
+			 * new TourData entity is created. So each opened view gets a new tourdata for the same
+			 * tour which causes LOTs of troubles.
 			 */
 			_tourDataCache = new TourDataCache(10);
 		}
@@ -424,12 +422,12 @@ public class TourManager {
 
 	/**
 	 * Compares two {@link TourData}
-	 * 
+	 *
 	 * @param tourData1
 	 * @param tourData2
 	 * @return Returns <code>true</code> when they are the same, otherwise this is an internal error
 	 * @throws MyTourbookException
-	 *             throws an exception when {@link TourData} are corrupted
+	 *            throws an exception when {@link TourData} are corrupted
 	 */
 	public static boolean checkTourData(final TourData tourData1, final TourData tourData2) throws MyTourbookException {
 
@@ -486,7 +484,7 @@ public class TourManager {
 
 	/**
 	 * Computes distance values from geo position.
-	 * 
+	 *
 	 * @param tourDataList
 	 * @return Returns <code>true</code> when distance values are computed and {@link TourData} are
 	 *         updated but not yet saved.
@@ -604,7 +602,7 @@ public class TourManager {
 
 	/**
 	 * Create a tour chart configuration by reading the settings from the pref store.
-	 * 
+	 *
 	 * @return Returns a new tour chart configuration.
 	 */
 	public static TourChartConfiguration createDefaultTourChartConfig() {
@@ -612,8 +610,7 @@ public class TourManager {
 		final TourChartConfiguration tcc = new TourChartConfiguration(true);
 
 		/*
-		 * convert graph ids from the preferences into visible graphs in the chart panel
-		 * configuration
+		 * convert graph ids from the preferences into visible graphs in the chart panel configuration
 		 */
 		final String[] prefGraphIds = StringToArrayConverter.convertStringToArray(//
 				_prefStore.getString(ITourbookPreferences.GRAPH_VISIBLE));
@@ -650,7 +647,7 @@ public class TourManager {
 
 	/**
 	 * Create one {@link TourData} for multiple tours.
-	 * 
+	 *
 	 * @param tourIds
 	 * @return
 	 */
@@ -708,7 +705,7 @@ public class TourManager {
 
 		final short[] toRunDyn_StanceTime = multiTourData.runDyn_StanceTime = new short[numTimeSlices];
 		final short[] toRunDyn_StanceTimeBalance = multiTourData.runDyn_StanceTimeBalance = new short[numTimeSlices];
-		final short[] toRunDyn_StepLength = multiTourData.runDyn_StepLength = new short[numTimeSlices];
+		final short[] toRunDyn_StepLength = new short[numTimeSlices];
 		final short[] toRunDyn_VertOscillation = multiTourData.runDyn_VerticalOscillation = new short[numTimeSlices];
 		final short[] toRunDyn_VertRatio = multiTourData.runDyn_VerticalRatio = new short[numTimeSlices];
 
@@ -769,7 +766,7 @@ public class TourManager {
 
 			final short[] fromRunDyn_StanceTime = fromTourData.runDyn_StanceTime;
 			final short[] fromRunDyn_StanceTimeBalance = fromTourData.runDyn_StanceTimeBalance;
-			final short[] fromRunDyn_StepLength = fromTourData.runDyn_StepLength;
+			final short[] fromRunDyn_StepLength = fromTourData.getRunDyn_StepLength_Raw();
 			final short[] fromRunDyn_VertOscillation = fromTourData.runDyn_VerticalOscillation;
 			final short[] fromRunDyn_VertRatio = fromTourData.runDyn_VerticalRatio;
 
@@ -948,7 +945,9 @@ public class TourManager {
 		if (isRunDyn_StanceTimeBalance == false) {
 			multiTourData.clear_RunDyn_StanceTimeBalance();
 		}
-		if (isRunDyn_StepLength == false) {
+		if (isRunDyn_StepLength) {
+			multiTourData.setRunDyn_StepLength_Raw(toRunDyn_StepLength);
+		} else {
 			multiTourData.clear_RunDyn_StepLength();
 		}
 		if (isRunDyn_VerticalOscillation == false) {
@@ -987,7 +986,7 @@ public class TourManager {
 	/**
 	 * Create segments for the chart, each tour is a segment. Segments are used to draw different
 	 * background colors.
-	 * 
+	 *
 	 * @param tourData
 	 * @param chartDataModel
 	 */
@@ -1069,16 +1068,16 @@ public class TourManager {
 	/**
 	 * Fire {@link TourEventId} and check if the fired event also must do some actions in the
 	 * {@link TourManager}.
-	 * 
+	 *
 	 * @param listener
 	 * @param tourEventId
 	 * @param part
 	 * @param customData
 	 */
 	private static void fireEvent_Final(final ITourEventListener listener,
-										final TourEventId tourEventId,
-										final IWorkbenchPart part,
-										final Object customData) {
+													final TourEventId tourEventId,
+													final IWorkbenchPart part,
+													final Object customData) {
 
 		if (tourEventId == TourEventId.CLEAR_DISPLAYED_TOUR) {
 
@@ -1089,8 +1088,8 @@ public class TourManager {
 	}
 
 	public static void fireEventWithCustomData(	final TourEventId tourEventId,
-												final Object customData,
-												final IWorkbenchPart part) {
+																final Object customData,
+																final IWorkbenchPart part) {
 
 //		System.out.println(
 //				(UI.timeStampNano() + " [" + TourManager.class.getSimpleName() + "] fireEventWithCustomData()()")
@@ -1109,7 +1108,7 @@ public class TourManager {
 
 	/**
 	 * Try to get the tour chart and/or editor from the active part.
-	 * 
+	 *
 	 * @param tourData
 	 * @return Returns the {@link TourChart} for the requested {@link TourData}
 	 */
@@ -1179,15 +1178,15 @@ public class TourManager {
 
 	/**
 	 * Get color for a graph from the pref store.
-	 * 
+	 *
 	 * @param graphName
 	 * @param colorProfileName
-	 *            Can be any of <br>
-	 *            {@link GraphColorManager#PREF_COLOR_BRIGHT},<br>
-	 *            {@link GraphColorManager#PREF_COLOR_DARK}<br>
-	 *            {@link GraphColorManager#PREF_COLOR_LINE}<br>
-	 *            {@link GraphColorManager#PREF_COLOR_MAPPING}<br>
-	 *            {@link GraphColorManager#PREF_COLOR_TEXT}.
+	 *           Can be any of <br>
+	 *           {@link GraphColorManager#PREF_COLOR_BRIGHT},<br>
+	 *           {@link GraphColorManager#PREF_COLOR_DARK}<br>
+	 *           {@link GraphColorManager#PREF_COLOR_LINE}<br>
+	 *           {@link GraphColorManager#PREF_COLOR_MAPPING}<br>
+	 *           {@link GraphColorManager#PREF_COLOR_TEXT}.
 	 * @return
 	 */
 	public static RGB getGraphColor(final String graphName, final String colorProfileName) {
@@ -1221,7 +1220,7 @@ public class TourManager {
 
 	/**
 	 * Searches all tour providers in the workbench and return tours which are selected.
-	 * 
+	 *
 	 * @return Returns tour id's or <code>null</code> when tours are not found
 	 */
 	public static ArrayList<TourData> getSelectedTours() {
@@ -1231,8 +1230,8 @@ public class TourManager {
 
 	/**
 	 * @param isOnlyGeoTour
-	 *            When <code>true</code> then only tours with latitude/longitude will be returned,
-	 *            otherwise all tours will be returned.
+	 *           When <code>true</code> then only tours with latitude/longitude will be returned,
+	 *           otherwise all tours will be returned.
 	 * @return
 	 */
 	public static ArrayList<TourData> getSelectedTours(final boolean isOnlyGeoTour) {
@@ -1329,7 +1328,7 @@ public class TourManager {
 	 * creates always a new instance.
 	 * <p>
 	 * This is a shortcut for {@link TourManager.getInstance().getTourData(tourId)}.
-	 * 
+	 *
 	 * @param requestedTourId
 	 * @return Returns the tour data for the tour id or <code>null</code> when tour is not in the
 	 *         database.
@@ -1452,7 +1451,7 @@ public class TourManager {
 
 	/**
 	 * Checks if {@link TourData} can be painted
-	 * 
+	 *
 	 * @param tourData
 	 * @return <code>true</code> when {@link TourData} contains a tour which can be painted in the
 	 *         map
@@ -1483,7 +1482,7 @@ public class TourManager {
 	 * Checks if a tour in the {@link TourDataEditorView} is modified and shows the editor when it's
 	 * modified. A message dialog informs the user about the modified tour and that the requested
 	 * actions cannot be done.
-	 * 
+	 *
 	 * @return Returns <code>true</code> when the tour is modified in the {@link TourDataEditorView}
 	 */
 	public static boolean isTourEditorModified() {
@@ -1494,9 +1493,9 @@ public class TourManager {
 	 * Checks if a tour in the {@link TourDataEditorView} is modified and shows the editor when it's
 	 * modified. A message dialog informs the user about the modified tour and that the requested
 	 * actions cannot be done.
-	 * 
+	 *
 	 * @param isOpenEditor
-	 *            When <code>true</code> then the tour editor is displayed.
+	 *           When <code>true</code> then the tour editor is displayed.
 	 * @return Returns <code>true</code> when the tour is modified in the {@link TourDataEditorView}
 	 */
 	public static boolean isTourEditorModified(final boolean isOpenEditor) {
@@ -1522,15 +1521,15 @@ public class TourManager {
 	/**
 	 * @param allTourIds
 	 * @param allTourData
-	 *            Contains loaded {@link TourData} for all tour ids which pass the lat/lon check.
+	 *           Contains loaded {@link TourData} for all tour ids which pass the lat/lon check.
 	 * @param isCheckLatLon
-	 *            When <code>true</code> only tours with lat/lon will be returned, otherwise all
-	 *            tours will be returned.
+	 *           When <code>true</code> only tours with lat/lon will be returned, otherwise all tours
+	 *           will be returned.
 	 * @return Returns a unique key for all {@link TourData}.
 	 */
-	public static long loadTourData(final ArrayList<Long> allTourIds,
-									final ArrayList<TourData> allTourData,
-									final boolean isCheckLatLon) {
+	public static long loadTourData(	final ArrayList<Long> allTourIds,
+												final ArrayList<TourData> allTourData,
+												final boolean isCheckLatLon) {
 
 		// check if the requested data are already available
 		if (_multipleTourData_List != null && allTourIds.hashCode() == _multipleTourData_List_Hash) {
@@ -1674,16 +1673,16 @@ public class TourManager {
 
 	/**
 	 * Remove time slices from {@link TourData}
-	 * 
+	 *
 	 * @param tourData
 	 * @param firstIndex
 	 * @param lastIndex
 	 * @param isRemoveTime
 	 */
 	public static void removeTimeSlices(final TourData tourData,
-										final int firstIndex,
-										final int lastIndex,
-										final boolean isRemoveTime) {
+													final int firstIndex,
+													final int lastIndex,
+													final boolean isRemoveTime) {
 
 		if (isRemoveTime) {
 			// this must be done before the time series are modified
@@ -1774,8 +1773,8 @@ public class TourManager {
 	}
 
 	private static double[] removeTimeSlices_Double(final double[] dataSerie,
-													final int firstIndex,
-													final int lastIndex) {
+																	final int firstIndex,
+																	final int lastIndex) {
 
 		final int oldSerieLength = dataSerie.length;
 		final int newSerieLength = oldSerieLength - (lastIndex - firstIndex + 1);
@@ -1904,8 +1903,8 @@ public class TourManager {
 	}
 
 	private static void removeTimeSlices_TimeAndDistance(	final TourData _tourData,
-															final int firstIndex,
-															final int lastIndex) {
+																			final int firstIndex,
+																			final int lastIndex) {
 
 		final int[] timeSerie = _tourData.timeSerie;
 		final float[] distSerie = _tourData.distanceSerie;
@@ -1942,16 +1941,16 @@ public class TourManager {
 	/**
 	 * Removes markers which are deleted and updates marker serie index which are positioned after
 	 * the deleted time slices
-	 * 
+	 *
 	 * @param tourData
 	 * @param firstSerieIndex
 	 * @param lastSerieIndex
 	 * @param isRemoveTime
 	 */
 	private static void removeTourMarkers(	final TourData tourData,
-											final int firstSerieIndex,
-											final int lastSerieIndex,
-											final boolean isRemoveTime) {
+														final int firstSerieIndex,
+														final int lastSerieIndex,
+														final boolean isRemoveTime) {
 
 		// check if markers are available
 		final Set<TourMarker> allTourMarkers = tourData.getTourMarkers();
@@ -2007,16 +2006,16 @@ public class TourManager {
 	}
 
 	/**
-	 * Saves tours which have been modified and updates the tour data editor, a notification is
-	 * fired when the data are saved.
+	 * Saves tours which have been modified and updates the tour data editor, a notification is fired
+	 * when the data are saved.
 	 * <p>
 	 * If a tour is openend in the {@link TourDataEditorView}, the tour will be saved only when the
 	 * tour is not dirty, if the tour is dirty, saving is not done.
 	 * <p>
 	 * The event {@link TourEventId#TOUR_CHANGED} is fired always.
-	 * 
+	 *
 	 * @param tourData
-	 *            modified tour
+	 *           modified tour
 	 * @return Returns the persisted {@link TourData}
 	 */
 	public static TourData saveModifiedTour(final TourData tourData) {
@@ -2026,12 +2025,12 @@ public class TourManager {
 	/**
 	 * @param tourData
 	 * @param isFireNotification
-	 *            When <code>true</code>, a notification is fired when the data are saved
+	 *           When <code>true</code>, a notification is fired when the data are saved
 	 * @return Returns the saved {@link TourData} or <code>null</code> when saving fails
 	 */
 	public static TourData saveModifiedTour(final TourData tourData, final boolean isFireNotification) {
 
-		final ArrayList<TourData> modifiedTours = new ArrayList<TourData>();
+		final ArrayList<TourData> modifiedTours = new ArrayList<>();
 		modifiedTours.add(tourData);
 
 		final ArrayList<TourData> savedTourData = saveModifiedTours(modifiedTours, isFireNotification);
@@ -2048,11 +2047,10 @@ public class TourManager {
 	 * {@link TourEventId#TOUR_CHANGED} event.<br>
 	 * <br>
 	 * If a tour is openend in the {@link TourDataEditorView}, the tour will be saved only when the
-	 * tour is not dirty, if the tour is dirty, saving is not done. The change event is always
-	 * fired.
-	 * 
+	 * tour is not dirty, if the tour is dirty, saving is not done. The change event is always fired.
+	 *
 	 * @param modifiedTours
-	 *            modified tours
+	 *           modified tours
 	 * @return Returns a list with all persisted {@link TourData}
 	 */
 	public static ArrayList<TourData> saveModifiedTours(final ArrayList<TourData> modifiedTours) {
@@ -2065,20 +2063,20 @@ public class TourManager {
 	 * <br>
 	 * If a tour is openend in the {@link TourDataEditorView}, the tour will be saved only when the
 	 * tour is not dirty, if the tour is dirty, saving is not done.
-	 * 
+	 *
 	 * @param modifiedTours
-	 *            modified tours
+	 *           modified tours
 	 * @param canFireNotification
-	 *            when <code>true</code>, a notification is fired when the data are saved
+	 *           when <code>true</code>, a notification is fired when the data are saved
 	 * @return a list with all persisted {@link TourData}
 	 */
 	private static ArrayList<TourData> saveModifiedTours(	final ArrayList<TourData> modifiedTours,
-															final boolean canFireNotification) {
+																			final boolean canFireNotification) {
 
 		// reset multiple tour data cache
 		_multipleTourData = null;
 
-		final ArrayList<TourData> savedTours = new ArrayList<TourData>();
+		final ArrayList<TourData> savedTours = new ArrayList<>();
 
 		if (modifiedTours.size() == 0) {
 			// there is nothing modified
@@ -2146,9 +2144,9 @@ public class TourManager {
 	}
 
 	private static void saveModifiedTours_OneTour(	final ArrayList<TourData> savedTours,
-													final TourData[] tourDataEditorSavedTour,
-													final boolean[] doFireChangeEvent,
-													final TourData tourData) {
+																	final TourData[] tourDataEditorSavedTour,
+																	final boolean[] doFireChangeEvent,
+																	final TourData tourData) {
 		boolean doSaveTour = false;
 		TourData savedTour = null;
 
@@ -2176,8 +2174,8 @@ public class TourManager {
 					savedTour = tourData;
 
 					/*
-					 * make the tour data editor visible, it could be hidden and confuses the user
-					 * when the changes are not visible
+					 * make the tour data editor visible, it could be hidden and confuses the user when
+					 * the changes are not visible
 					 */
 					openTourEditor(false);
 
@@ -2190,8 +2188,7 @@ public class TourManager {
 					savedTour = TourDatabase.saveTour(tourData, true);
 
 					/*
-					 * set flag for the tour data editor that the tour is saved and the ui is
-					 * updated
+					 * set flag for the tour data editor that the tour is saved and the ui is updated
 					 */
 					tourDataEditorSavedTour[0] = savedTour;
 				}
@@ -2268,7 +2265,7 @@ public class TourManager {
 
 	/**
 	 * set the graph colors from the pref store
-	 * 
+	 *
 	 * @param yData
 	 * @param graphName
 	 */
@@ -2363,7 +2360,7 @@ public class TourManager {
 
 	/**
 	 * Tour save listeners will be called to save tours before the application is shut down
-	 * 
+	 *
 	 * @param listener
 	 */
 	public void addTourSaveListener(final ITourSaveListener listener) {
@@ -2394,7 +2391,7 @@ public class TourManager {
 
 	/**
 	 * Clip values when a minimum distance is fallen short of
-	 * 
+	 *
 	 * @param tourData
 	 */
 	private void computeValueClipping(final TourData tourData) {
@@ -2762,7 +2759,7 @@ public class TourManager {
 
 				final TourData tourData = (TourData) chartModel.getCustomData(CUSTOM_DATA_TOUR_DATA);
 
-				final float metricValue = tourData.computeAvg_FromValues(tourData.runDyn_StepLength,
+				final float metricValue = tourData.computeAvg_FromValues(tourData.getRunDyn_StepLength_Raw(),
 						valueIndexLeft,
 						valueIndexRight);
 
@@ -2803,9 +2800,9 @@ public class TourManager {
 
 	/**
 	 * Creates a chart data model from the tour data.
-	 * 
+	 *
 	 * @param tourData
-	 *            data which contains the tour data
+	 *           data which contains the tour data
 	 * @param tourChartProperty
 	 * @return
 	 */
@@ -2815,15 +2812,15 @@ public class TourManager {
 	}
 
 	public ChartDataModel createChartDataModel(	final TourData tourData,
-												final TourChartConfiguration tcc,
-												final boolean hasPropertyChanged) {
+																final TourChartConfiguration tcc,
+																final boolean hasPropertyChanged) {
 
 		return createChartDataModel_10(tourData, tcc, hasPropertyChanged);
 	}
 
 	private ChartDataModel createChartDataModel_10(	final TourData tourData,
-													final TourChartConfiguration tcc,
-													final boolean hasPropertyChanged) {
+																	final TourChartConfiguration tcc,
+																	final boolean hasPropertyChanged) {
 
 		final ChartDataModel chartDataModel = new ChartDataModel(ChartType.LINE);
 
@@ -2905,8 +2902,8 @@ public class TourManager {
 			xDataTime.setStartDateTime(tourStartTime);
 
 			/*
-			 * when time is displayed, the x-axis can show the start time starting from 0 or from
-			 * the current time of the day
+			 * when time is displayed, the x-axis can show the start time starting from 0 or from the
+			 * current time of the day
 			 */
 			final int tourTimeOfDay = tourStartTime.get(ChronoField.SECOND_OF_DAY);
 
@@ -2934,8 +2931,8 @@ public class TourManager {
 		}
 
 		/*
-		 * Don't draw a (visible) line when a break occures, break time can be minutes, hours or
-		 * days. This feature prevents to draw triangles between 2 value points
+		 * Don't draw a (visible) line when a break occures, break time can be minutes, hours or days.
+		 * This feature prevents to draw triangles between 2 value points
 		 */
 		xDataTime.setNoLine(tourData.getBreakTimeSerie());
 
@@ -2953,7 +2950,7 @@ public class TourManager {
 		final boolean isHrZoneDisplayed = tcc.canShowHrZones && tcc.isHrZoneDisplayed;
 
 // SET_FORMATTING_OFF
-		
+
 		final ChartDataYSerie yDataAltitude		= createModelData_Altitude(		tourData, chartDataModel, chartType, isHrZoneDisplayed, tcc);
 		final ChartDataYSerie yDataPulse 		= createModelData_Heartbeat(	tourData, chartDataModel, chartType, isHrZoneDisplayed);
 		final ChartDataYSerie yDataSpeed 		= createModelData_Speed(		tourData, chartDataModel, chartType, isHrZoneDisplayed);
@@ -2966,7 +2963,7 @@ public class TourManager {
 		final ChartDataYSerie yDataTemperature 	= createModelData_Temperature(	tourData, chartDataModel, chartType, isHrZoneDisplayed);
 
 		final ChartDataYSerie yDataTourCompare 	= createModelData_TourCompare(	tourData, chartDataModel, chartType, tcc);
-		
+
 		final ChartDataYSerie yData_RunDyn_StanceTime			= createModelData_RunDyn_StanceTime(			tourData, chartDataModel, chartType, isHrZoneDisplayed);
 		final ChartDataYSerie yData_RunDyn_StanceTimeBalance	= createModelData_RunDyn_StanceTimeBalance(		tourData, chartDataModel, chartType, isHrZoneDisplayed);
 		final ChartDataYSerie yData_RunDyn_StepLength			= createModelData_RunDyn_StepLength(			tourData, chartDataModel, chartType, isHrZoneDisplayed);
@@ -2976,8 +2973,8 @@ public class TourManager {
 // SET_FORMATTING_ON
 
 		/*
-		 * all visible graphs are added as y-data to the chart data model in the sequence as they
-		 * were activated
+		 * all visible graphs are added as y-data to the chart data model in the sequence as they were
+		 * activated
 		 */
 		for (final int actionId : tcc.getVisibleGraphs()) {
 
@@ -3158,9 +3155,9 @@ public class TourManager {
 	 * Altimeter
 	 */
 	private ChartDataYSerie createModelData_Altimeter(	final TourData tourData,
-														final ChartDataModel chartDataModel,
-														final ChartType chartType,
-														final boolean isHrZoneDisplayed) {
+																		final ChartDataModel chartDataModel,
+																		final ChartType chartType,
+																		final boolean isHrZoneDisplayed) {
 
 		final float[] altimeterSerie = tourData.getAltimeterSerie();
 		ChartDataYSerie yDataAltimeter = null;
@@ -3222,10 +3219,10 @@ public class TourManager {
 	 * Altitude
 	 */
 	private ChartDataYSerie createModelData_Altitude(	final TourData tourData,
-														final ChartDataModel chartDataModel,
-														final ChartType chartType,
-														final boolean isHrZoneDisplayed,
-														final TourChartConfiguration tcc) {
+																		final ChartDataModel chartDataModel,
+																		final ChartType chartType,
+																		final boolean isHrZoneDisplayed,
+																		final TourChartConfiguration tcc) {
 		ChartDataYSerie yDataAltitude = null;
 
 		final float[] altitudeSerie = tourData.getAltitudeSmoothedSerie(true);
@@ -3291,9 +3288,9 @@ public class TourManager {
 	 * Cadence
 	 */
 	private ChartDataYSerie createModelData_Cadence(final TourData tourData,
-													final ChartDataModel chartDataModel,
-													final ChartType chartType,
-													final boolean isHrZoneDisplayed) {
+																	final ChartDataModel chartDataModel,
+																	final ChartType chartType,
+																	final boolean isHrZoneDisplayed) {
 
 		final float[] cadenceSerie = tourData.getCadenceSerie();
 		ChartDataYSerie yDataCadence = null;
@@ -3391,9 +3388,9 @@ public class TourManager {
 	 * Gradient
 	 */
 	private ChartDataYSerie createModelData_Gradient(	final TourData tourData,
-														final ChartDataModel chartDataModel,
-														final ChartType chartType,
-														final boolean isHrZoneDisplayed) {
+																		final ChartDataModel chartDataModel,
+																		final ChartType chartType,
+																		final boolean isHrZoneDisplayed) {
 
 		final float[] gradientSerie = tourData.gradientSerie;
 		ChartDataYSerie yDataGradient = null;
@@ -3431,9 +3428,9 @@ public class TourManager {
 	}
 
 	private ChartDataYSerie createModelData_Heartbeat(	final TourData tourData,
-														final ChartDataModel chartDataModel,
-														final ChartType chartType,
-														final boolean isHrZoneDisplayed) {
+																		final ChartDataModel chartDataModel,
+																		final ChartType chartType,
+																		final boolean isHrZoneDisplayed) {
 		/**
 		 * Heartbeat
 		 */
@@ -3473,10 +3470,10 @@ public class TourManager {
 		return yDataPulse;
 	}
 
-	private ChartDataYSerie createModelData_Pace(	final TourData tourData,
-													final ChartDataModel chartDataModel,
-													final ChartType chartType,
-													final boolean isHrZoneDisplayed) {
+	private ChartDataYSerie createModelData_Pace(final TourData tourData,
+																final ChartDataModel chartDataModel,
+																final ChartType chartType,
+																final boolean isHrZoneDisplayed) {
 		/*
 		 * pace
 		 */
@@ -3521,9 +3518,9 @@ public class TourManager {
 	 * Power
 	 */
 	private ChartDataYSerie createModelData_Power(	final TourData tourData,
-													final ChartDataModel chartDataModel,
-													final ChartType chartType,
-													final boolean isHrZoneDisplayed) {
+																	final ChartDataModel chartDataModel,
+																	final ChartType chartType,
+																	final boolean isHrZoneDisplayed) {
 
 		final float[] powerSerie = tourData.getPowerSerie();
 		ChartDataYSerie yDataPower = null;
@@ -3564,9 +3561,9 @@ public class TourManager {
 	 * Running Dynamics: Stance time
 	 */
 	private ChartDataYSerie createModelData_RunDyn_StanceTime(	final TourData tourData,
-																final ChartDataModel chartDataModel,
-																final ChartType chartType,
-																final boolean isHrZoneDisplayed) {
+																					final ChartDataModel chartDataModel,
+																					final ChartType chartType,
+																					final boolean isHrZoneDisplayed) {
 
 		ChartDataYSerie yDataSerie = null;
 
@@ -3608,9 +3605,9 @@ public class TourManager {
 	 * Running Dynamics: Stance time balance
 	 */
 	private ChartDataYSerie createModelData_RunDyn_StanceTimeBalance(	final TourData tourData,
-																		final ChartDataModel chartDataModel,
-																		final ChartType chartType,
-																		final boolean isHrZoneDisplayed) {
+																							final ChartDataModel chartDataModel,
+																							final ChartType chartType,
+																							final boolean isHrZoneDisplayed) {
 
 		ChartDataYSerie yDataSerie = null;
 
@@ -3654,9 +3651,9 @@ public class TourManager {
 	 * Running Dynamics: Step length
 	 */
 	private ChartDataYSerie createModelData_RunDyn_StepLength(	final TourData tourData,
-																final ChartDataModel chartDataModel,
-																final ChartType chartType,
-																final boolean isHrZoneDisplayed) {
+																					final ChartDataModel chartDataModel,
+																					final ChartType chartType,
+																					final boolean isHrZoneDisplayed) {
 
 		ChartDataYSerie yDataSerie = null;
 
@@ -3699,9 +3696,9 @@ public class TourManager {
 	 * Running Dynamics: Vertical oscillation
 	 */
 	private ChartDataYSerie createModelData_RunDyn_VerticalOscillation(	final TourData tourData,
-																		final ChartDataModel chartDataModel,
-																		final ChartType chartType,
-																		final boolean isHrZoneDisplayed) {
+																								final ChartDataModel chartDataModel,
+																								final ChartType chartType,
+																								final boolean isHrZoneDisplayed) {
 
 		ChartDataYSerie yDataSerie = null;
 
@@ -3745,9 +3742,9 @@ public class TourManager {
 	 * Running Dynamics: Vertical ratio
 	 */
 	private ChartDataYSerie createModelData_RunDyn_VerticalRatio(	final TourData tourData,
-																	final ChartDataModel chartDataModel,
-																	final ChartType chartType,
-																	final boolean isHrZoneDisplayed) {
+																						final ChartDataModel chartDataModel,
+																						final ChartType chartType,
+																						final boolean isHrZoneDisplayed) {
 
 		ChartDataYSerie yDataSerie = null;
 
@@ -3790,9 +3787,9 @@ public class TourManager {
 	 * Speed
 	 */
 	private ChartDataYSerie createModelData_Speed(	final TourData tourData,
-													final ChartDataModel chartDataModel,
-													final ChartType chartType,
-													final boolean isHrZoneDisplayed) {
+																	final ChartDataModel chartDataModel,
+																	final ChartType chartType,
+																	final boolean isHrZoneDisplayed) {
 
 		final float[] speedSerie = tourData.getSpeedSerie();
 		ChartDataYSerie yDataSpeed = null;
@@ -3833,10 +3830,10 @@ public class TourManager {
 	/**
 	 * Temperature
 	 */
-	private ChartDataYSerie createModelData_Temperature(final TourData tourData,
-														final ChartDataModel chartDataModel,
-														final ChartType chartType,
-														final boolean isHrZoneDisplayed) {
+	private ChartDataYSerie createModelData_Temperature(	final TourData tourData,
+																			final ChartDataModel chartDataModel,
+																			final ChartType chartType,
+																			final boolean isHrZoneDisplayed) {
 
 		final float[] temperatureSerie = tourData.getTemperatureSerie();
 		ChartDataYSerie yDataTemperature = null;
@@ -3877,10 +3874,10 @@ public class TourManager {
 	/**
 	 * Tour compare altitude or lat/lon difference
 	 */
-	private ChartDataYSerie createModelData_TourCompare(final TourData tourData,
-														final ChartDataModel chartDataModel,
-														final ChartType chartType,
-														final TourChartConfiguration tcc) {
+	private ChartDataYSerie createModelData_TourCompare(	final TourData tourData,
+																			final ChartDataModel chartDataModel,
+																			final ChartType chartType,
+																			final TourChartConfiguration tcc) {
 
 		final float[] tourCompareSerie = tourData.tourCompareSerie;
 		ChartDataYSerie yDataTourCompare = null;
@@ -3914,7 +3911,7 @@ public class TourManager {
 	 */
 	public ArrayList<TourData> getTourData(final ArrayList<Long> tourIds) {
 
-		final ArrayList<TourData> tourDataList = new ArrayList<TourData>();
+		final ArrayList<TourData> tourDataList = new ArrayList<>();
 
 		for (final Long tourId : tourIds) {
 			final TourData tourData = getTourData(tourId);
@@ -3929,7 +3926,7 @@ public class TourManager {
 	/**
 	 * Get a tour from the cache, the cache is necessary because getting a tour from the database
 	 * creates always a new instance.
-	 * 
+	 *
 	 * @param requestedTourId
 	 * @return Returns the tour data for the tour id or <code>null</code> when tour is not in the
 	 *         database.
@@ -3995,10 +3992,10 @@ public class TourManager {
 
 	/**
 	 * Get a tour from the database and keep it in the cache
-	 * 
+	 *
 	 * @param tourId
-	 * @return Returns the tour data for the tour id or <code>null</code> when the tour is not in
-	 *         the database
+	 * @return Returns the tour data for the tour id or <code>null</code> when the tour is not in the
+	 *         database
 	 */
 	public TourData getTourDataFromDb(final Long tourId) {
 
@@ -4019,7 +4016,7 @@ public class TourManager {
 
 	/**
 	 * Opens the tour for the given tour id
-	 * 
+	 *
 	 * @param tourId
 	 */
 	public void openTourInEditorArea(final Long tourId) {
@@ -4066,7 +4063,7 @@ public class TourManager {
 	 * <p>
 	 * When the tour is requested next time with {@link #getTourData(Long)}, is will be loaded from
 	 * the database.
-	 * 
+	 *
 	 * @param tourId
 	 */
 	public void removeTourFromCache(final Long tourId) {
@@ -4154,9 +4151,9 @@ public class TourManager {
 
 	/**
 	 * Before the application is shut down, the tour save listeners are called to save unsaved data.
-	 * 
-	 * @return Returns <code>true</code> when the tours have been saved or false when it was
-	 *         canceled by the user
+	 *
+	 * @return Returns <code>true</code> when the tours have been saved or false when it was canceled
+	 *         by the user
 	 */
 	public boolean saveTours() {
 
@@ -4177,22 +4174,22 @@ public class TourManager {
 	/**
 	 * @param yData
 	 * @param valueMultiplier
-	 *            Will be multiplied with the pref store value.
+	 *           Will be multiplied with the pref store value.
 	 * @param maxValueAdjustment
-	 *            Will be added/subtracted from the pref max value.
+	 *           Will be added/subtracted from the pref max value.
 	 * @param prefName_IsMinEnabled
 	 * @param prefName_IsMaxEnabled
 	 * @param prefName_MinValue
 	 * @param prefName_MaxValue
 	 */
 	private void setVisibleForcedValues(final ChartDataYSerie yData,
-										final float valueMultiplier,
-										final double minValueAdjustment,
-										final double maxValueAdjustment,
-										final String prefName_IsMinEnabled,
-										final String prefName_IsMaxEnabled,
-										final String prefName_MinValue,
-										final String prefName_MaxValue) {
+													final float valueMultiplier,
+													final double minValueAdjustment,
+													final double maxValueAdjustment,
+													final String prefName_IsMinEnabled,
+													final String prefName_IsMaxEnabled,
+													final String prefName_MinValue,
+													final String prefName_MaxValue) {
 
 		if (_prefStore.getBoolean(ITourbookPreferences.GRAPH_IS_MIN_MAX_ENABLED) == false) {
 
@@ -4229,21 +4226,21 @@ public class TourManager {
 	/**
 	 * @param yData
 	 * @param valueMultiplier
-	 *            Will be multiplied with the pref store value.
+	 *           Will be multiplied with the pref store value.
 	 * @param maxValueAdjustment
-	 *            Will be added/subtracted from the pref max value.
+	 *           Will be added/subtracted from the pref max value.
 	 * @param prefName_IsMinEnabled
 	 * @param prefName_IsMaxEnabled
 	 * @param prefName_MinValue
 	 * @param prefName_MaxValue
 	 */
 	private void setVisibleForcedValues(final ChartDataYSerie yData,
-										final int valueMultiplier,
-										final double maxValueAdjustment,
-										final String prefName_IsMinEnabled,
-										final String prefName_IsMaxEnabled,
-										final String prefName_MinValue,
-										final String prefName_MaxValue) {
+													final int valueMultiplier,
+													final double maxValueAdjustment,
+													final String prefName_IsMinEnabled,
+													final String prefName_IsMaxEnabled,
+													final String prefName_MinValue,
+													final String prefName_MaxValue) {
 
 		if (_prefStore.getBoolean(ITourbookPreferences.GRAPH_IS_MIN_MAX_ENABLED) == false) {
 
@@ -4281,12 +4278,12 @@ public class TourManager {
 
 	/**
 	 * Do custom actions when a tour in a table/tree/chart is double clicked
-	 * 
+	 *
 	 * @param tourProvider
 	 * @param tourDoubleClickState
 	 */
 	public void tourDoubleClickAction(	final ITourProvider tourProvider,
-										final TourDoubleClickState tourDoubleClickState) {
+													final TourDoubleClickState tourDoubleClickState) {
 
 		ArrayList<TourData> selectedTours = tourProvider.getSelectedTours();
 		if (selectedTours.size() == 0) {
